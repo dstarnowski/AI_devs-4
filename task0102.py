@@ -276,8 +276,8 @@ for i in range(1,20):
         label=f"task0102 - praca niezależnego agenta",
         #model="openai/gpt-oss-120b",
         #model="openai/gpt-4.1-mini",
-        model="openai/gpt-5",
-        #reasoning_effort="medium"
+        model="openai/gpt-5-mini",
+        #reasoning_effort="high"
     )
 
     if isinstance(result, dict) and result.get("tool_calls"):
@@ -289,7 +289,7 @@ for i in range(1,20):
 
             fn = available_functions[fn_name]
             fn_result = fn(**fn_args)
-            agent_display.message(f"  <- Wynik: {fn_result}")
+            agent_display.message(f"  <- Wynik: {json.dumps(fn_result, ensure_ascii=False)[0:60]}")
 
             messages.append({
                 "role": "tool",
@@ -301,6 +301,7 @@ for i in range(1,20):
         break
 
 # Wysłanie wyniku do Centrali
+agent_display.message(f"Odpowiedź: {final_answer}")
 final_answer = json.loads(final_answer)
 agent_display.message(f"Agent zakończył pracę, wysyłanie wyniku do Centrali...")
 agent_display.next_action()
