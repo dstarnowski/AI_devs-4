@@ -43,8 +43,8 @@ agent_display.message(f"Dane pobrane i wczytane do pamięci. ({len(people)} osó
 
 # get yyyy-mm-dd from today
 TODAY = datetime.now().strftime("%Y-%m-%d")
-MIN_BIRTH = f"1980-{datetime.now().strftime("%m-%d")}"  # 46 years before today
-MAX_BIRTH = f"2006-{datetime.now().strftime("%m-%d")}"  # 20 years before today
+MIN_BIRTH = f"1980-{datetime.now().strftime('%m-%d')}"  # 46 years before today
+MAX_BIRTH = f"2006-{datetime.now().strftime('%m-%d')}"  # 20 years before today
 
 # Filtrowanie deterministyczne
 agent_display.next_action()
@@ -139,5 +139,7 @@ response = centrala.send_result("people", answer_people)
 agent_display.next_action()
 agent_display.message(f"Odpowiedź centrali: {response.status_code}")
 agent_display.message(response.text)
+agent_display.message("Agent zakończył pracę.")
 
-agent_display.log(f"Agent zakończył pracę. Wykonano {llm.get_session_stats()['executions']} zapytań., łącznie wyniosło to {llm.get_session_stats()['total_price']} USD. (tokeny: {llm.get_session_stats()['total_input_tokens']} input, {llm.get_session_stats()['total_output_tokens']} output)")
+agent_display.log(response.text)
+llm.final_stats()

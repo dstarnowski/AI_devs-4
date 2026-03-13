@@ -12,6 +12,8 @@ class AgentDisplay:
         self._tokens_in: int = 0
         self._tokens_out: int = 0
         self._price: float = 0.0
+        self._local_tokens_in: int = 0
+        self._local_tokens_out: int = 0
         self._actions: list[str] = []
         self._current_action: int = -1
 
@@ -28,10 +30,14 @@ class AgentDisplay:
             self._message_lines.append(text)
         self.refresh()
 
-    def stats(self, tokens_in: int, tokens_out: int, price: float) -> None:
-        self._tokens_in = tokens_in
-        self._tokens_out = tokens_out
-        self._price = price
+    def stats(self, tokens_in: int, tokens_out: int, price: float | None) -> None:
+        if price is None:
+            self._local_tokens_in = tokens_in
+            self._local_tokens_out = tokens_out
+        else:
+            self._tokens_in = tokens_in
+            self._tokens_out = tokens_out
+            self._price = price
         self.refresh()
 
     def set_actions(self, actions: list[str]) -> None:
@@ -94,12 +100,17 @@ class AgentDisplay:
         log_panel_w = max(1, width - 2)
 
         stats_text = Text()
-        stats_text.append("Tokeny IN:  ", style="grey62")
+        stats_text.append("   Tokeny IN: ", style="grey62")
         stats_text.append(f"{self._tokens_in}\n", style="white")
-        stats_text.append("Tokeny OUT: ", style="grey62")
+        stats_text.append("  Tokeny OUT: ", style="grey62")
         stats_text.append(f"{self._tokens_out}\n", style="white")
-        stats_text.append("Cena USD:   ", style="grey62")
-        stats_text.append(f"{self._price:.4f}", style="white")
+        stats_text.append("    Cena USD: ", style="grey62")
+        stats_text.append(f"{self._price:.4f}\n", style="white")
+        stats_text.append("\n")
+        stats_text.append("  Lokalne IN: ", style="grey62")
+        stats_text.append(f"{self._local_tokens_in}\n", style="white")
+        stats_text.append(" Lokalne OUT: ", style="grey62")
+        stats_text.append(f"{self._local_tokens_out}", style="white")
 
         layout = Layout()
         layout.split_column(

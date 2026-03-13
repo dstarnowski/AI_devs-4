@@ -91,12 +91,20 @@ class MyLLM:
             output_cost = 0
             total_cost = 0
 
-        self._agent_display.log(
-            f"[{label}] "
-            f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
-            f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
-            f"TOTAL: ${total_cost:.6f}"
-        )
+        if self._local_llm:
+            self._agent_display.log(
+                f"[{label}] "
+                f"IN: {input_tokens} tokens | "
+                f"OUT: {output_tokens} tokens | "
+                f"(local model)"
+            )
+        else:
+            self._agent_display.log(
+                f"[{label}] "
+                f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
+                f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
+                f"TOTAL: ${total_cost:.6f}"
+            )
 
         self._log_to_db(model, input_tokens, output_tokens, input_cost, output_cost, label)
 
@@ -104,7 +112,10 @@ class MyLLM:
         self._session_stats["total_input_tokens"] += input_tokens
         self._session_stats["total_output_tokens"] += output_tokens
         self._session_stats["total_price"] += total_cost
-        self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], self._session_stats["total_price"])
+        if self._local_llm:
+            self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], None)
+        else:
+            self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], self._session_stats["total_price"])
 
     def get_session_stats(self) -> dict[str, int | float]:
         return dict(self._session_stats)
@@ -182,3 +193,9 @@ class MyLLM:
         self._record_usage(model, data, label)
 
         return message
+
+    def final_stats(self):
+        if self._local_llm:
+            self._agent_display.log(f"Wykonano {self.get_session_stats()['executions']} zapytań do modelu lokalnego: {self.get_session_stats()['total_input_tokens']} tokenów IN i {self.get_session_stats()['total_output_tokens']} tokenów OUT.")
+        else:
+            self._agent_display.log(f"Wykonano {self.get_session_stats()['executions']} zapytań, łącznie wyniosło to {self.get_session_stats()['total_price']} USD. (tokeny: {self.get_session_stats()['total_input_tokens']} input, {self.get_session_stats()['total_output_tokens']} output)")

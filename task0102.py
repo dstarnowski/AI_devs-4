@@ -32,7 +32,7 @@ agent_display.set_actions([
 agent_display.next_action()
 agent_display.message("Agent rozpoczyna pracę - łączenie...")
 llm = MyLLM(api_key=sekrets.openrouter_key, local_llm=False, agent_display=agent_display)
-#llm = MyLLM(local_llm_url=sekrets.local_llm, agent_display=agent_display)
+llm_local = MyLLM(local_llm_url=sekrets.local_llm, agent_display=agent_display)
 centrala = Centrala(server_url=sekrets.centrala_url, api_key=sekrets.centrala_key)
 agent_display.message("Agent połączony i gotowy do pracy.")
 
@@ -51,8 +51,8 @@ agent_display.message(f"Dane pobrane i wczytane do pamięci. ({len(people)} osó
 
 # get yyyy-mm-dd from today
 TODAY = datetime.now().strftime("%Y-%m-%d")
-MIN_BIRTH = f"1980-{datetime.now().strftime("%m-%d")}"  # 46 years before today
-MAX_BIRTH = f"2006-{datetime.now().strftime("%m-%d")}"  # 20 years before today
+MIN_BIRTH = f"1980-{datetime.now().strftime('%m-%d')}"  # 46 years before today
+MAX_BIRTH = f"2006-{datetime.now().strftime('%m-%d')}"  # 20 years before today
 
 # Filtrowanie deterministyczne
 agent_display.next_action()
@@ -107,16 +107,16 @@ print (f"Przetwarzanie osób...")
 
 for i, person in enumerate(filtered, 1):
 
-    result = llm.chat(
+    result = llm_local.chat(
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": person["job"]},
         ],
         response_format=response_format,
         label=f"task0102 - sprawdzenie kategorii pracy",
-        #model="openai/gpt-oss-120b",
-        model="openai/gpt-4.1-mini",
-        #reasoning_effort="medium"
+        model="openai/gpt-oss-120b",
+        #model="openai/gpt-4.1-mini",
+        reasoning_effort="medium"
     )
 
     categories = json.loads(result['content'])
@@ -311,5 +311,8 @@ response = centrala.send_result("findhim", final_answer)
 agent_display.next_action()
 agent_display.message(f"Odpowiedź centrali: {response.status_code}")
 agent_display.message(response.text)
+agent_display.message("Agent zakończył pracę.")
 
-agent_display.log(f"Agent zakończył pracę. Wykonano {llm.get_session_stats()['executions']} zapytań., łącznie wyniosło to {llm.get_session_stats()['total_price']} USD. (tokeny: {llm.get_session_stats()['total_input_tokens']} input, {llm.get_session_stats()['total_output_tokens']} output)")
+agent_display.log(response.text)
+llm.final_stats()
+llm_local.final_stats()
