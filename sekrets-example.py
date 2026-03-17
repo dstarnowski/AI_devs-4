@@ -7,3 +7,7 @@ centrala_key = "xxxx-xxxx-xxxx"
 centrala_url = "https://domain.com/"
 # Lokalny LLM
 local_llm = "http://10.0.0.100:8000/api/v1"
+# Klucz NGROK
+ngrok_key = "xxxx_xxxx"
+# NGROK URL z przekierowania
+ngrok_url = "example-domain.ngrok-free.dev"

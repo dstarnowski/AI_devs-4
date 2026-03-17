@@ -91,20 +91,21 @@ class MyLLM:
             output_cost = 0
             total_cost = 0
 
-        if self._local_llm:
-            self._agent_display.log(
-                f"[{label}] "
-                f"IN: {input_tokens} tokens | "
-                f"OUT: {output_tokens} tokens | "
-                f"(local model)"
-            )
-        else:
-            self._agent_display.log(
-                f"[{label}] "
-                f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
-                f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
-                f"TOTAL: ${total_cost:.6f}"
-            )
+        if len(label) > 0:
+            if self._local_llm:
+                self._agent_display.log(
+                    f"[{label}] "
+                    f"IN: {input_tokens} tokens | "
+                    f"OUT: {output_tokens} tokens | "
+                    f"(local model)"
+                )
+            else:
+                self._agent_display.log(
+                    f"[{label}] "
+                    f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
+                    f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
+                    f"TOTAL: ${total_cost:.6f}"
+                )
 
         self._log_to_db(model, input_tokens, output_tokens, input_cost, output_cost, label)
 
