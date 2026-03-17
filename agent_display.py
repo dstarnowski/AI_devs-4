@@ -17,17 +17,26 @@ class AgentDisplay:
         self._actions: list[str] = []
         self._current_action: int = -1
 
+    def _wrap_lines(self, text: str, width: int) -> list[str]:
+        result: list[str] = []
+        for line in text.split("\n"):
+            if width > 0 and len(line) > width:
+                while len(line) > width:
+                    result.append(line[:width])
+                    line = line[width:]
+            result.append(line)
+        return result
+
     def log(self, text: str) -> None:
-        self._log_lines.append(text)
+        width = max(1, self._console.size.width - 4)
+        for line in self._wrap_lines(text, width):
+            self._log_lines.append(line)
         self.refresh()
 
     def message(self, text: str) -> None:
-        if "\n" in text:
-            text = text.split("\n")
-            for line in text:
-                self._message_lines.append(line)
-        else:
-            self._message_lines.append(text)
+        width = max(1, (self._console.size.width * 2) // 3 - 4)
+        for line in self._wrap_lines(text, width):
+            self._message_lines.append(line)
         self.refresh()
 
     def stats(self, tokens_in: int, tokens_out: int, price: float | None) -> None:
