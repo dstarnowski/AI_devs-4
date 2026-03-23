@@ -4,11 +4,13 @@ from datetime import datetime
 
 import requests
 
+import agent_display
+
 
 class MyLLM:
     """Bridge to the OpenRouter API with per-session model pricing cache and usage logging."""
 
-    _BASE_URL = "https://openrouter.ai/api/v1"
+    _BASE_URL = "https://openrouter.ai/api"
     _DB_FILE = "openrouter_logs.db"
     _LOCAL_DB_FILE = "local_llm_logs.db"
 
@@ -91,21 +93,22 @@ class MyLLM:
             output_cost = 0
             total_cost = 0
 
-        if len(label) > 0:
-            if self._local_llm:
-                self._agent_display.log(
-                    f"[{label}] "
-                    f"IN: {input_tokens} tokens | "
-                    f"OUT: {output_tokens} tokens | "
-                    f"(local model)"
-                )
-            else:
-                self._agent_display.log(
-                    f"[{label}] "
-                    f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
-                    f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
-                    f"TOTAL: ${total_cost:.6f}"
-                )
+        if self._agent_display is not None:
+            if len(label) > 0:
+                if self._local_llm:
+                    self._agent_display.log(
+                        f"[{label}] "
+                        f"IN: {input_tokens} tokens | "
+                        f"OUT: {output_tokens} tokens | "
+                        f"(local model)"
+                    )
+                else:
+                    self._agent_display.log(
+                        f"[{label}] "
+                        f"IN: {input_tokens} tokens (${input_cost:.6f}) | "
+                        f"OUT: {output_tokens} tokens (${output_cost:.6f}) | "
+                        f"TOTAL: ${total_cost:.6f}"
+                    )
 
         self._log_to_db(model, input_tokens, output_tokens, input_cost, output_cost, label)
 
@@ -113,10 +116,11 @@ class MyLLM:
         self._session_stats["total_input_tokens"] += input_tokens
         self._session_stats["total_output_tokens"] += output_tokens
         self._session_stats["total_price"] += total_cost
-        if self._local_llm:
-            self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], None)
-        else:
-            self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], self._session_stats["total_price"])
+        if self._agent_display is not None:
+            if self._local_llm:
+                self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], None)
+            else:
+                self._agent_display.stats(self._session_stats["total_input_tokens"], self._session_stats["total_output_tokens"], self._session_stats["total_price"])
 
     def get_session_stats(self) -> dict[str, int | float]:
         return dict(self._session_stats)
@@ -134,7 +138,7 @@ class MyLLM:
 
     def _fetch_model_pricing(self, model: str) -> None:
         resp = requests.get(
-            f"{self._BASE_URL}/models",
+            f"{self._BASE_URL}/v1/models",
             headers=self._headers(),
             timeout=30,
         )
@@ -160,6 +164,7 @@ class MyLLM:
         response_format: dict | None = None,
         reasoning_effort: str | None = None,
         tools: list[dict] | None = None,
+        chat_simple = False
     ) -> str | dict:
         """Send a chat completion request.
 
@@ -182,15 +187,15 @@ class MyLLM:
             payload["tools"] = tools
         url = self._local_llm_url if self._local_llm else self._BASE_URL
         resp = requests.post(
-            f"{url}/chat/completions",
+            f"{url}/chat" if chat_simple else f"{url}/v1/chat/completions",
             headers=self._headers(),
             json=payload,
-            timeout=120,
+            timeout=300,
         )
         resp.raise_for_status()
         data = resp.json()
 
-        message = data["choices"][0]["message"]
+        message = data if chat_simple else data["choices"][0]["message"]
         self._record_usage(model, data, label)
 
         return message
