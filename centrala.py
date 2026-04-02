@@ -16,6 +16,15 @@ class Centrala:
                 f.write(response.content)
         return response.content
 
+    def get_file_any(self, server_filename: str, local_filepath: str | None):
+        url = f"{self.server_url}{server_filename}"
+        response = requests.get(url)
+        response.raise_for_status()
+        if local_filepath is not None:
+            with open(local_filepath, "wb") as f:
+                f.write(response.content)
+        return response.content
+
     def get_flags(self, response_json) -> str:
         matches = re.findall(r'\{FLG:([^}]+)\}', str(response_json))
         return "\n".join(matches)
