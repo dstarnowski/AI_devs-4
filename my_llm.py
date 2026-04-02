@@ -163,6 +163,7 @@ class MyLLM:
         label: str = "",
         response_format: dict | None = None,
         reasoning_effort: str | None = None,
+        reasoning: dict | None = None,
         tools: list[dict] | None = None,
         chat_simple = False
     ) -> str | dict:
@@ -185,6 +186,8 @@ class MyLLM:
             payload["reasoning_effort"] = reasoning_effort
         if tools is not None:
             payload["tools"] = tools
+        if reasoning is not None:
+            payload["reasoning"] = reasoning
         url = self._local_llm_url if self._local_llm else self._BASE_URL
         resp = requests.post(
             f"{url}/chat" if chat_simple else f"{url}/v1/chat/completions",
